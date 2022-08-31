@@ -13,6 +13,7 @@ function listaDeTarefas() {
   function criaTarefa(textInput) {
     const li = criaLi();
     li.innerText = textInput; // adiciona o texto digitado no input
+    li.setAttribute('data-text', textInput);
     tarefas.appendChild(li); // adiciona a tarefa na lista
     limpaInput();
     criaBotaoApagar(li);
@@ -34,19 +35,29 @@ function listaDeTarefas() {
   }
 
   // função para salvar as tarefas
-function salvarTarefas() {
-    const liTarefas = tarefas.querySelectorAll('li'); // seleciona todos os li's
-    const listaDeTarefas = []; // cria um array vazio
+  function salvarTarefas() {
+    const liTarefas = Array.from(tarefas.querySelectorAll('li')); // seleciona todos os li's
 
-    for (let tarefa of liTarefas) { // percorre todos os li'se adiciona no array
-      let tarefaTexto = tarefa.innerText; // pega o texto do listaDeTarefas atual e adiciona na variável
-      tarefaTexto = tarefaTexto.replace('Apagar', '').trim(); // remove o Apagar e espaços em branco
-      listaDeTarefas.push(tarefaTexto); // adiciona o texto no array
-    }
+    const listaDeTarefas = liTarefas.map((tarefa, index) => ({
+      tarefa: tarefa.innerText.replace('Apagar', '').trim(),
+      index: index,
+    }));
 
     const tarefasJSON = JSON.stringify(listaDeTarefas); // transforma o array em JSON
     localStorage.setItem('tarefas', tarefasJSON); // adiciona o JSON no localStorage
-}
+  }
+
+  function removerTarefa(liItem) {
+    const tarefaParaRemover = liItem.dataset.text;
+
+    const storageTarefas = localStorage.getItem('tarefas');
+    const listaDeTarefas = JSON.parse(storageTarefas);
+
+    const listaDeTarefasFiltrada = listaDeTarefas.filter(tarefa => tarefa.tarefa !== tarefaParaRemover);
+
+    const tarefasJSON = JSON.stringify(listaDeTarefasFiltrada);
+    localStorage.setItem('tarefas', tarefasJSON);
+  }
 
   // função para adicionar a tarefa ao clicar no botão
   inputTarefa.addEventListener('keypress', function(e) {
@@ -65,7 +76,7 @@ function salvarTarefas() {
     const el = e.target;
     if (el.classList.contains('apagar')) { // verifica se o elemento clicado tem a classe apagar
       el.parentElement.remove(); // remove o elemento pai do elemento clicado
-      salvarTarefas();
+      removerTarefa(el.parentElement);
     }
   });
 }
